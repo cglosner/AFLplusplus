@@ -549,14 +549,17 @@ int main(int argc, char **argv_orig, char **envp) {
   rand_set_seed(afl, tv.tv_sec ^ tv.tv_usec ^ getpid());
 
   afl->shmem_testcase_mode = 1;  // we always try to perform shmem fuzzing
-
+  // ADD the -lcov option here
   while (
       (opt = getopt(
            argc, argv,
-           "+Ab:B:c:CdDe:E:hi:I:f:F:g:G:l:L:m:M:nNOo:p:RQs:S:t:T:UV:WXx:YZ")) >
+           "+Ab:B:c:CdDe:E:hi:I:f:F:g:G:l:L:m:M:nNOo:p:RQs:S:t:T:UV:WXx:YZ:lcov")) >
       0) {
 
     switch (opt) {
+      case 'lcov':
+        afl->in_lcov_tracefile = 1;
+        break;
 
       case 'g':
         afl->min_length = atoi(optarg);
@@ -2004,7 +2007,7 @@ int main(int argc, char **argv_orig, char **envp) {
   }
 
   #endif
-
+  // MAYBE EDIT
   if (afl->shmem_testcase_mode) { setup_testcase_shmem(afl); }
 
   afl->start_time = get_cur_time();
@@ -2033,7 +2036,7 @@ int main(int argc, char **argv_orig, char **envp) {
     use_argv = argv + optind;
 
   }
-
+  // MODIFY
   if (afl->non_instrumented_mode || afl->fsrv.qemu_mode ||
       afl->fsrv.frida_mode || afl->fsrv.cs_mode || afl->unicorn_mode) {
 
@@ -2049,7 +2052,7 @@ int main(int argc, char **argv_orig, char **envp) {
     afl->map_tmp_buf = ck_realloc(afl->map_tmp_buf, map_size);
 
   }
-
+  //TRACEBITS get INIT
   afl->argv = use_argv;
   afl->fsrv.trace_bits =
       afl_shm_init(&afl->shm, afl->fsrv.map_size, afl->non_instrumented_mode);
@@ -2207,7 +2210,12 @@ int main(int argc, char **argv_orig, char **envp) {
 
   // after we have the correct bitmap size we can read the bitmap -B option
   // and set the virgin maps
-  if (afl->in_bitmap) {
+  // ADD a feature to handle reading in an already existing lcov tracefile
+  // -lcov option
+  if(afl->in_lcov_tracefile)
+  {
+    read_coverage(afl->in_lcov_tracefile, afl->virgin_bits, afl->fsrv.map_size);
+  } else if (afl->in_bitmap) {
 
     read_bitmap(afl->in_bitmap, afl->virgin_bits, afl->fsrv.map_size);
 

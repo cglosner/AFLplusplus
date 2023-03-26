@@ -509,6 +509,7 @@ typedef struct afl_state {
   u8 skip_deterministic,                /* Skip deterministic stages?       */
       use_splicing,                     /* Recombine input files?           */
       non_instrumented_mode,            /* Run in non-instrumented mode?    */
+      in_lcov_tracefile,                /* Run with an inputted lcov tracefile */
       score_changed,                    /* Scoring for favorites changed?   */
       resuming_fuzz,                    /* Resuming an older fuzzing job?   */
       timeout_given,                    /* Specific timeout given?          */
