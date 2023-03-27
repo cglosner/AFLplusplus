@@ -558,7 +558,8 @@ int main(int argc, char **argv_orig, char **envp) {
 
     switch (opt) {
       case 'lcov':
-        afl->in_lcov_tracefile = 1;
+        if (afl->in_lcov_tracefile) { FATAL("Multiple -lcov options not supported"); }
+        afl->in_lcov_tracefile = optarg;
         break;
 
       case 'g':
@@ -2212,10 +2213,10 @@ int main(int argc, char **argv_orig, char **envp) {
   // and set the virgin maps
   // ADD a feature to handle reading in an already existing lcov tracefile
   // -lcov option
-  if(afl->in_lcov_tracefile)
+  /*if(afl->in_lcov_tracefile)
   {
     read_coverage(afl->in_lcov_tracefile, afl->virgin_bits, afl->fsrv.map_size);
-  } else if (afl->in_bitmap) {
+  } else */if (afl->in_bitmap) {
 
     read_bitmap(afl->in_bitmap, afl->virgin_bits, afl->fsrv.map_size);
 

@@ -33,6 +33,7 @@
 #include "list.h"
 #include "forkserver.h"
 #include "hash.h"
+#include "lcov_coverage.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -317,6 +318,9 @@ static void afl_fauxsrv_execv(afl_forkserver_t *fsrv, char **argv) {
       WARNF("Fauxserver could not determine child's exit code. ");
 
     }
+
+    // Modify trace_bit
+    get_coverage(fsrv, fsrv->trace_bits);
 
     /* Relay wait status to AFL pipe, then loop back. */
 
