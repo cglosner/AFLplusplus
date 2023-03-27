@@ -33,7 +33,7 @@
 #include "list.h"
 #include "forkserver.h"
 #include "hash.h"
-#include "lcov_coverage.h"
+//#include "lcov_coverage.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -57,6 +57,62 @@
 /* Describe integer as memory size. */
 
 static list_t fsrv_list = {.element_prealloc_count = 0};
+
+void get_coverage(afl_forkserver_t *fsrv, u8 *map)
+{
+    //should take an input of the trace_bit and return the updated
+    //trace_bit
+    u8 *fname = "";
+    //It should read the lcov tracefile and increase a random bit
+    //according to the line location
+    // fname should be the lcov file name
+    FILE *fp = fopen(fname, "r");
+    char * line = NULL;
+    size_t len = 0;
+    u32 msize = (fsrv->map_size >> 2);
+    ssize_t read;
+    if (fp == NULL) { PFATAL("Unable to open '%s'", fname); }
+    
+    //since it is best effort it can be some random pattern
+    //maybe just the total map size xored with the line number
+    //or something like that
+    int count = 0;
+    int line_number = 0;
+    while ((read = getline(&line, &len, fp)) != -1) {
+        if(line[0] == 'D')
+        {
+          int end = 0;
+          for(int i = 3; i < read; i++)
+          {
+            if(line[i] == ',')
+            {
+              end = i;
+              count = atoi(line[i+1]);
+              break;
+            }
+          }
+          char* str = malloc(end-3);
+          for(int j = 0; j < (end-3); j++)
+          {
+            str[j] = line[j+3];
+          }
+
+          line_number = atoi(str);
+          if(str)
+            free(str);
+          map[msize^line_number] += count;
+        }
+    }
+
+    if (line)
+        free(line);
+    
+    // fname will be hardcoded to whatever I output from simics
+    // can somewhat be based off of read_coverage, except
+    // it needs to update and not completely rewrite.
+    fclose(fp);
+}
+
 
 static void fsrv_exec_child(afl_forkserver_t *fsrv, char **argv) {
 

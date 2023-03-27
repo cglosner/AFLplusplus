@@ -192,7 +192,7 @@ typedef enum fsrv_run_result {
   /* 05 */ FSRV_RUN_NOBITS,
 
 } fsrv_run_result_t;
-
+//void get_coverage(afl_forkserver_t *fsrv, u8 *map);
 void afl_fsrv_init(afl_forkserver_t *fsrv);
 void afl_fsrv_init_dup(afl_forkserver_t *fsrv_to, afl_forkserver_t *from);
 void afl_fsrv_start(afl_forkserver_t *fsrv, char **argv,

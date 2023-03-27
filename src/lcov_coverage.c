@@ -17,9 +17,10 @@
        there may be multiple line numbers that correspond to different files
        causing skewed coverage.
 */
-#include "afl-fuzz.h"
+//#include "afl-fuzz.h"
+//#include "forkserver.h"
 #include "lcov_coverage.h"
-#include <limits.h> 
+//#include <limits.h> 
 
 void get_coverage(afl_forkserver_t *fsrv, u8 *map)
 {

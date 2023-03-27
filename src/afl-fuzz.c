@@ -556,15 +556,17 @@ int main(int argc, char **argv_orig, char **envp) {
   while (
       (opt = getopt(
            argc, argv,
-           "+Ab:B:c:CdDe:E:hi:I:f:F:g:G:l:L:m:M:nNOo:p:RQs:S:t:T:UV:WXx:YZ:lcov")) >
+           "+Ab:B:c:CdDe:E:hi:I:f:F:g:G:l:L:m:M:nNOo:p:RQs:S:t:T:UV:WXx:YZ")) >
+           //"+Ab:B:c:CdDe:E:hi:I:f:F:g:G:l:L:m:M:nNOo:p:RQs:S:t:T:UV:WXx:YZ:lcov")) >
       0) {
 
     switch (opt) {
+      /*
       case 'lcov':
         if (afl->in_lcov_tracefile) { FATAL("Multiple -lcov options not supported"); }
         afl->in_lcov_tracefile = optarg;
         break;
-
+      */
       case 'g':
         afl->min_length = atoi(optarg);
         break;
