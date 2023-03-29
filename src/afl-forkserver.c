@@ -62,14 +62,14 @@ void get_coverage(afl_forkserver_t *fsrv, u8 *map)
 {
     //should take an input of the trace_bit and return the updated
     //trace_bit
-    u8 *fname = "";
+    u8 *fname = "merged_tracefile.info";
     //It should read the lcov tracefile and increase a random bit
     //according to the line location
     // fname should be the lcov file name
     FILE *fp = fopen(fname, "r");
     char * line = NULL;
     size_t len = 0;
-    u32 msize = (fsrv->map_size >> 2);
+    u32 msize = (fsrv->map_size);
     ssize_t read;
     if (fp == NULL) { PFATAL("Unable to open '%s'", fname); }
     
@@ -87,11 +87,11 @@ void get_coverage(afl_forkserver_t *fsrv, u8 *map)
             if(line[i] == ',')
             {
               end = i;
-              count = atoi(line[i+1]);
+              count = atoi((const char*)&line[i+1]);
               break;
             }
           }
-          char* str = malloc(end-3);
+          char* str = calloc((end-3), sizeof(char));;
           for(int j = 0; j < (end-3); j++)
           {
             str[j] = line[j+3];
@@ -100,7 +100,8 @@ void get_coverage(afl_forkserver_t *fsrv, u8 *map)
           line_number = atoi(str);
           if(str)
             free(str);
-          map[msize^line_number] += count;
+          map[(msize^line_number)%msize] = count;
+          //map[line_number] = count;
         }
     }
 
@@ -377,7 +378,6 @@ static void afl_fauxsrv_execv(afl_forkserver_t *fsrv, char **argv) {
 
     // Modify trace_bit
     get_coverage(fsrv, fsrv->trace_bits);
-
     /* Relay wait status to AFL pipe, then loop back. */
 
     if (write(FORKSRV_FD + 1, &status, 4) != 4) { exit(1); }
@@ -825,16 +825,16 @@ void afl_fsrv_start(afl_forkserver_t *fsrv, char **argv,
   if (rlen == 4) {
 
     if (!be_quiet) { OKF("All right - fork server is up."); }
-
+    ACTF("Right before AFL_DEBUG");
     if (getenv("AFL_DEBUG")) {
 
       ACTF("Extended forkserver functions received (%08x).", status);
 
     }
-
+    ACTF("Right before First error check");
     if ((status & FS_OPT_ERROR) == FS_OPT_ERROR)
       report_error_and_exit(FS_OPT_GET_ERROR(status));
-
+    ACTF("Right after First error check");
     if ((status & FS_OPT_ENABLED) == FS_OPT_ENABLED) {
 
       // workaround for recent afl++ versions
@@ -854,14 +854,14 @@ void afl_fsrv_start(afl_forkserver_t *fsrv, char **argv,
         }
 
       }
-
+      ACTF("Right before Snapshot");
       if ((status & FS_OPT_SNAPSHOT) == FS_OPT_SNAPSHOT) {
 
         fsrv->snapshot = 1;
         if (!be_quiet) { ACTF("Using SNAPSHOT feature."); }
 
       }
-
+      ACTF("Right before Shared MEM");
       if ((status & FS_OPT_SHDMEM_FUZZ) == FS_OPT_SHDMEM_FUZZ) {
 
         if (fsrv->support_shmem_fuzz) {
