@@ -71,7 +71,7 @@ void get_coverage(afl_forkserver_t *fsrv, u8 *map)
     size_t len = 0;
     u32 msize = (fsrv->map_size);
     ssize_t read;
-    if (fp == NULL) { PFATAL("Unable to open '%s'", fname); }
+    if (fp == NULL) { return; }
     
     //since it is best effort it can be some random pattern
     //maybe just the total map size xored with the line number
