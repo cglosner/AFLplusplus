@@ -305,18 +305,47 @@ static void afl_fauxsrv_execv(afl_forkserver_t *fsrv, char **argv) {
   }
 
   void (*old_sigchld_handler)(int) = signal(SIGCHLD, SIG_DFL);
-
+  int execs = 0;
   while (1) {
 
     uint32_t was_killed;
     int      status;
+    int argc = 0;
+    // Determine the length of the string representation of the number
+    int length = snprintf(NULL, 0, "%d", execs);
+
+    // Allocate memory for the string (including the null-terminating character)
+    char *number_str = (char *)malloc(length + 1);
+
+    // Convert the int to a string using sprintf()
+    sprintf(number_str, "%d", execs);  
+
+    // Calculate argc (the size of the original_argv)
+    while (argv[argc] != NULL) {
+      argc++;
+    }
+
+    // Allocate memory for the new argv (called new_argv)
+    int new_argc = argc + 1;
+    char **new_argv = (char **)malloc((new_argc + 1) * sizeof(char *));
+
+    // Copy existing elements from original_argv to new_argv
+    for (int i = 0; i < argc; ++i) {
+      new_argv[i] = argv[i];
+    }
+
+    // Allocate memory for the new element and copy it
+    new_argv[argc] = number_str;
+
+    // Set the last element of new_argv to NULL
+    new_argv[new_argc] = NULL;
 
     /* Wait for parent by reading from the pipe. Exit if read fails. */
 
     if (read(FORKSRV_FD, &was_killed, 4) != 4) { exit(0); }
 
     /* Create a clone of our process. */
-
+    execs++;
     child_pid = fork();
 
     if (child_pid < 0) { PFATAL("Fork failed"); }
@@ -350,7 +379,7 @@ static void afl_fauxsrv_execv(afl_forkserver_t *fsrv, char **argv) {
       close(FORKSRV_FD + 1);
 
       // finally: exec...
-      execv(fsrv->target_path, argv);
+      execv(fsrv->target_path, new_argv);
 
       /* Use a distinctive bitmap signature to tell the parent about execv()
         falling through. */
@@ -361,7 +390,9 @@ static void afl_fauxsrv_execv(afl_forkserver_t *fsrv, char **argv) {
       break;
 
     }
-
+    // Free allocated memory
+    free(number_str);
+    free(new_argv);
     /* In parent process: write PID to AFL. */
 
     if (write(FORKSRV_FD + 1, &child_pid, 4) != 4) { exit(0); }
@@ -378,8 +409,9 @@ static void afl_fauxsrv_execv(afl_forkserver_t *fsrv, char **argv) {
 
     // Modify trace_bit
     get_coverage(fsrv, fsrv->trace_bits);
-    /* Relay wait status to AFL pipe, then loop back. */
 
+    /* Relay wait status to AFL pipe, then loop back. */
+    
     if (write(FORKSRV_FD + 1, &status, 4) != 4) { exit(1); }
 
   }
