@@ -66,7 +66,6 @@ static void fsrv_exec_child(afl_forkserver_t *fsrv, char **argv) {
     setenv("AFL_DISABLE_LLVM_INSTRUMENTATION", "1", 0);
 
   }
-  ACTF("fsrv_exec_child");
   execv(fsrv->target_path, argv);
 
   WARNF("Execv failed in forkserver.");
@@ -675,16 +674,13 @@ void afl_fsrv_start(afl_forkserver_t *fsrv, char **argv,
     /* Isolate the process and configure standard descriptors. If out_file is
        specified, stdin is /dev/null; otherwise, out_fd is cloned instead. */
 
-    ACTF("setsid();");
     setsid();
-    ACTF("if (!(debug_child_output)) {");
     if (!(debug_child_output)) {
 
       dup2(fsrv->dev_null_fd, 1);
       dup2(fsrv->dev_null_fd, 2);
 
     }
-    ACTF("if (!fsrv->use_stdin) {");
     if (!fsrv->use_stdin) {
 
       dup2(fsrv->dev_null_fd, 0);
@@ -697,7 +693,6 @@ void afl_fsrv_start(afl_forkserver_t *fsrv, char **argv,
     }
 
     /* Set up control and status pipes, close the unneeded original fds. */
-    ACTF("if (dup2(ctl_pipe[0], FORKSRV_FD) < 0)");
     if (dup2(ctl_pipe[0], FORKSRV_FD) < 0) { PFATAL("dup2() failed"); }
     if (dup2(st_pipe[1], FORKSRV_FD + 1) < 0) { PFATAL("dup2() failed"); }
 
@@ -723,9 +718,8 @@ void afl_fsrv_start(afl_forkserver_t *fsrv, char **argv,
     if (!getenv("LD_BIND_LAZY")) { setenv("LD_BIND_NOW", "1", 1); }
 
     /* Set sane defaults for sanitizers */
-    ACTF("set_sanitizer_defaults();");
     set_sanitizer_defaults();
-    ACTF("fsrv->init_child_func(fsrv, argv);");
+
     fsrv->init_child_func(fsrv, argv);
 
     /* Use a distinctive bitmap signature to tell the parent about execv()
@@ -760,7 +754,7 @@ void afl_fsrv_start(afl_forkserver_t *fsrv, char **argv,
 
     u32 time_ms = read_s32_timed(fsrv->fsrv_st_fd, &status, fsrv->init_tmout,
                                  stop_soon_p);
-    ACTF("time_ms(%d)", time_ms);
+
     if (!time_ms) {
 
       s32 tmp_pid = fsrv->fsrv_pid;
@@ -796,7 +790,7 @@ void afl_fsrv_start(afl_forkserver_t *fsrv, char **argv,
 
   /* If we have a four-byte "hello" message from the server, we're all set.
      Otherwise, try to figure out what went wrong. */
-  ACTF("rlen(%d)", rlen);
+
   if (rlen == 4) {
 
     if (!be_quiet) { OKF("All right - fork server is up."); }
